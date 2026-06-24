@@ -1,0 +1,56 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   JSON TREE
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.json-tree {
+  font-family: var(--ba-font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ba-text);
+}
+
+.json-tree__leaf {
+  padding: 0.0625rem 0;
+  word-break: break-word;
+}
+
+.json-tree__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  padding: 0.0625rem 0.25rem;
+  border-radius: 3px;
+  transition: background var(--ba-duration-fast) var(--ba-ease);
+  line-height: 1.5;
+}
+
+.json-tree__toggle:hover { background: var(--ba-surface); }
+
+.json-tree__arrow {
+  font-size: 0.5625rem;
+  width: 0.75rem;
+  text-align: center;
+  color: var(--ba-text-muted);
+  flex-shrink: 0;
+}
+
+.json-tree__key { color: #0d9488; font-weight: 600; }
+.json-tree__bracket { color: var(--ba-text-muted); font-weight: 700; }
+
+.json-tree__preview {
+  font-size: 0.625rem;
+  color: var(--ba-text-muted);
+  font-style: italic;
+  margin: 0 0.2rem;
+}
+
+.json-tree__closing { padding: 0.0625rem 0; }
+.json-tree__string { color: #059669; word-break: break-all; }
+.json-tree__number { color: #d97706; font-weight: 600; }
+.json-tree__boolean { color: #7c3aed; font-weight: 600; }
+.json-tree__null { color: #9ca3af; font-style: italic; }

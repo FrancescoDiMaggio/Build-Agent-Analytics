@@ -1,0 +1,329 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   USER PROFILE — Header, Charts, Breakdown
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.ba-user-profile__header {
+  display: flex;
+  align-items: center;
+  gap: var(--ba-space-4);
+  margin-bottom: var(--ba-space-5);
+}
+
+.ba-user-profile__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ba-primary), var(--ba-secondary));
+  color: var(--ba-text-inverse);
+  font-size: 1.375rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+}
+
+.ba-user-profile__charts {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: var(--ba-space-4);
+  margin-bottom: var(--ba-space-6);
+}
+
+.ba-user-profile__chart-card {
+  padding: var(--ba-space-5);
+}
+
+.ba-user-profile__chart-card--wide {
+  min-width: 0;
+}
+
+/* Pie Chart */
+.ba-pie-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ba-space-4);
+}
+
+.ba-pie-chart__container {
+  position: relative;
+}
+
+.ba-pie-chart__svg {
+  display: block;
+  transform: rotate(0deg);
+}
+
+.ba-pie-chart__segment {
+  transition: opacity var(--ba-duration) var(--ba-ease);
+}
+
+.ba-pie-chart__segment:hover {
+  opacity: 0.8;
+}
+
+.ba-pie-chart__center-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  fill: var(--ba-text);
+  font-family: var(--ba-font);
+}
+
+.ba-pie-chart__center-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  fill: var(--ba-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--ba-font);
+}
+
+.ba-pie-chart__legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ba-space-2);
+  width: 100%;
+}
+
+.ba-pie-chart__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ba-space-2);
+  font-size: 0.75rem;
+}
+
+.ba-pie-chart__legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.ba-pie-chart__legend-name {
+  flex: 1;
+  color: var(--ba-text);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ba-pie-chart__legend-pct {
+  font-weight: 700;
+  color: var(--ba-text-secondary);
+  font-family: var(--ba-font-mono);
+  font-size: 0.6875rem;
+}
+
+/* Timeline Bar Chart */
+.ba-timeline-chart {
+  width: 100%;
+}
+
+.ba-timeline-chart__bar {
+  fill: url(#timelineGradient, #059669);
+  fill: var(--ba-primary);
+  transition: fill var(--ba-duration-fast) var(--ba-ease),
+              opacity var(--ba-duration-fast) var(--ba-ease);
+}
+
+.ba-timeline-chart__bar:hover {
+  fill: var(--ba-primary-light);
+  opacity: 0.85;
+}
+
+/* Percentage bar in breakdown table */
+.ba-user-profile__pct-bar-container {
+  display: flex;
+  align-items: center;
+  gap: var(--ba-space-2);
+}
+
+.ba-user-profile__pct-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--ba-primary), var(--ba-primary-light));
+  transition: width 0.4s var(--ba-ease);
+  min-width: 4px;
+  max-width: 120px;
+}
+
+.ba-user-profile__pct-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ba-primary-dark);
+  font-family: var(--ba-font-mono);
+  white-space: nowrap;
+}
+
+.ba-user-profile__app-name {
+  font-weight: 600;
+  color: var(--ba-text);
+}
+
+/* Timeline full-width card */
+.ba-user-profile__timeline-full {
+  margin-bottom: var(--ba-space-4);
+}
+
+/* Inline table (no extra shadow/border since it's inside a chart card) */
+.ba-user-profile__table-inline {
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+/* ─── Usage Insights ──────────────────────────────────────────────────────── */
+.ba-user-profile__insights-section {
+  margin-top: var(--ba-space-4);
+}
+
+.ba-user-profile__insights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ba-space-5);
+}
+
+.ba-user-profile__insights-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--ba-space-3);
+}
+
+.ba-user-profile__insight-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ba-space-1);
+  padding: var(--ba-space-4) var(--ba-space-3);
+  background: var(--ba-surface);
+  border-radius: var(--ba-radius);
+  border: 1px solid var(--ba-border-subtle);
+  text-align: center;
+  transition: transform var(--ba-duration-fast) var(--ba-ease),
+              box-shadow var(--ba-duration) var(--ba-ease);
+}
+
+.ba-user-profile__insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ba-shadow-2);
+}
+
+.ba-user-profile__insight-icon {
+  font-size: 1.25rem;
+}
+
+.ba-user-profile__insight-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--ba-primary);
+  line-height: var(--ba-leading-tight);
+}
+
+.ba-user-profile__insight-value--small {
+  font-size: 0.875rem;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ba-user-profile__insight-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--ba-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Day-of-week chart */
+.ba-user-profile__dow-chart {
+  background: var(--ba-surface);
+  border-radius: var(--ba-radius);
+  padding: var(--ba-space-4);
+  border: 1px solid var(--ba-border-subtle);
+}
+
+.ba-user-profile__dow-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ba-text-secondary);
+  margin-bottom: var(--ba-space-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ba-user-profile__dow-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: var(--ba-space-3);
+  height: 100px;
+}
+
+.ba-user-profile__dow-bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ba-space-1);
+  flex: 1;
+}
+
+.ba-user-profile__dow-bar-track {
+  width: 100%;
+  max-width: 36px;
+  height: 70px;
+  background: var(--ba-border-subtle);
+  border-radius: var(--ba-radius-sm);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.ba-user-profile__dow-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--ba-primary), var(--ba-primary-light));
+  border-radius: var(--ba-radius-sm);
+  transition: height 0.4s var(--ba-ease);
+  min-height: 2px;
+}
+
+.ba-user-profile__dow-bar-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--ba-text-secondary);
+  text-transform: uppercase;
+}
+
+.ba-user-profile__dow-bar-value {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--ba-text-muted);
+  font-family: var(--ba-font-mono);
+}
+
+/* Responsive — User Profile specific */
+@media (max-width: 768px) {
+  .ba-user-profile__charts {
+    grid-template-columns: 1fr;
+  }
+  .ba-user-profile__header {
+    gap: var(--ba-space-3);
+  }
+  .ba-user-profile__avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1.125rem;
+  }
+  .ba-user-profile__insights-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ba-user-profile__dow-bars {
+    height: 80px;
+  }
+}

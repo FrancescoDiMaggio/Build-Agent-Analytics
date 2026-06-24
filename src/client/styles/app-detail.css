@@ -1,0 +1,275 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DETAIL GRID (AppDetail header cards)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.ba-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--ba-space-4);
+  background: var(--ba-white);
+  border-radius: var(--ba-radius-lg);
+  padding: var(--ba-space-5);
+  margin-bottom: var(--ba-space-6);
+  box-shadow: var(--ba-shadow-1);
+  border: 1px solid var(--ba-border-subtle);
+}
+
+.ba-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.ba-detail-item__label {
+  font-size: 0.625rem;
+  color: var(--ba-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.ba-detail-item__value {
+  font-size: 0.875rem;
+  color: var(--ba-text);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   EFFORT ESTIMATION & COMPLEXITY
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.ba-section--effort {
+  background: var(--ba-white);
+  border-radius: var(--ba-radius-lg);
+  padding: var(--ba-space-5);
+  box-shadow: var(--ba-shadow-1);
+  border: 1px solid var(--ba-border-subtle);
+  border-top: 3px solid var(--ba-accent-amber);
+}
+
+.ba-section--effort .ba-section__header {
+  margin-bottom: var(--ba-space-4);
+}
+
+.ba-section--effort .ba-complexity {
+  box-shadow: none;
+  padding: var(--ba-space-4);
+  background: var(--ba-surface);
+  border-radius: var(--ba-radius);
+  border: none;
+}
+
+.ba-section--effort .ba-roi {
+  box-shadow: none;
+  border: 1px solid var(--ba-border);
+}
+
+.ba-complexity {
+  background: var(--ba-white);
+  border-radius: var(--ba-radius-lg);
+  padding: var(--ba-space-5);
+  box-shadow: var(--ba-shadow-1);
+  border: 1px solid var(--ba-border-subtle);
+  margin-bottom: var(--ba-space-5);
+}
+
+.ba-complexity__header {
+  display: flex;
+  align-items: center;
+  gap: var(--ba-space-3);
+  margin-bottom: var(--ba-space-4);
+}
+
+.ba-complexity__score {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ba-complexity-color, var(--ba-primary));
+}
+
+.ba-complexity__label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ba-complexity-color, var(--ba-text-secondary));
+}
+
+.ba-complexity__breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--ba-space-2);
+  font-size: 0.75rem;
+  color: var(--ba-text-secondary);
+}
+
+.ba-complexity__row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--ba-space-1) var(--ba-space-2);
+  background: var(--ba-surface);
+  border-radius: var(--ba-radius-sm);
+}
+
+.ba-complexity__row-value {
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ROI PANEL (Collapsible)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.ba-roi {
+  background: var(--ba-white);
+  border-radius: var(--ba-radius-lg);
+  box-shadow: var(--ba-shadow-1);
+  margin-bottom: var(--ba-space-5);
+  border-left: 4px solid var(--ba-primary-light);
+  border: 1px solid var(--ba-border-subtle);
+  border-left: 4px solid var(--ba-primary-light);
+  overflow: hidden;
+  transition: box-shadow var(--ba-duration) var(--ba-ease);
+}
+
+.ba-roi--open {
+  box-shadow: var(--ba-shadow-2);
+}
+
+.ba-roi__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--ba-space-4);
+  width: 100%;
+  padding: var(--ba-space-4) var(--ba-space-5);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background var(--ba-duration-fast) var(--ba-ease);
+}
+
+.ba-roi__toggle:hover {
+  background: var(--ba-primary-50);
+}
+
+.ba-roi__toggle-icon {
+  font-size: 0.875rem;
+  color: var(--ba-primary);
+  flex-shrink: 0;
+  transition: transform var(--ba-duration) var(--ba-ease);
+  width: 1rem;
+  text-align: center;
+}
+
+.ba-roi__title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ba-text);
+  white-space: nowrap;
+}
+
+.ba-roi__toggle-preview {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ba-primary);
+  background: var(--ba-primary-100);
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--ba-radius-pill);
+  white-space: nowrap;
+}
+
+.ba-roi--open .ba-roi__toggle-preview {
+  display: none;
+}
+
+.ba-roi__body {
+  padding: 0 var(--ba-space-5) var(--ba-space-5);
+  animation: ba-slideDown var(--ba-duration) var(--ba-ease) both;
+}
+
+@keyframes ba-slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ba-roi__savings {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ba-space-3);
+  margin-bottom: var(--ba-space-4);
+  padding: var(--ba-space-4);
+  background: var(--ba-primary-50);
+  border-radius: var(--ba-radius);
+}
+
+.ba-roi__savings-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--ba-primary);
+}
+
+.ba-roi__savings-percent {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ba-primary-dark);
+}
+
+.ba-roi__savings-label {
+  font-size: 0.6875rem;
+  color: var(--ba-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ba-roi__comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ba-space-4);
+  margin-bottom: var(--ba-space-4);
+}
+
+.ba-roi__metric {
+  text-align: center;
+  padding: var(--ba-space-4);
+  background: var(--ba-surface);
+  border-radius: var(--ba-radius);
+}
+
+.ba-roi__metric-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  margin-bottom: 0.125rem;
+}
+
+.ba-roi__metric-value--manual {
+  color: #dc2626;
+}
+
+.ba-roi__metric-value--agent {
+  color: #059669;
+}
+
+.ba-roi__metric-label {
+  font-size: 0.625rem;
+  color: var(--ba-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ba-roi__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ba-space-1);
+  font-size: 0.75rem;
+}
+
+.ba-roi__breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--ba-space-1) var(--ba-space-2);
+  background: var(--ba-surface);
+  border-radius: var(--ba-radius-sm);
+}
+
+.ba-roi__breakdown-value {
+  font-weight: 700;
+}
