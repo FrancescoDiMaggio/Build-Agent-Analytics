@@ -6,6 +6,10 @@ Built on ServiceNow using the **Now SDK Fluent DSL** (v4.7.2) with a React-based
 
 ---
 
+> ⚠️ **Before installing on a new instance:** check the instance's `glide.appcreator.company.code` system property and make sure it matches the app scope prefix (`x_snc_...`). A mismatch causes `npm run deploy` to fail with `Unable to install application as application was null`. Fixing it requires updating `scope`/`scopeId` in `now.config.json` **and** renaming every `x_snc_build_agranx*` reference across `src/` — the build does not do this automatically. See [Prerequisites](#prerequisites) for details.
+
+---
+
 ## Features
 
 | View | Description |
@@ -216,6 +220,11 @@ Agent task telemetry dashboard:
 
 - ServiceNow instance with **Build Agent** enabled
 - Now CLI / Now SDK installed locally
+- **Verify the instance's company code before first install on a new instance.** The app scope (`x_snc_...`) must start with the prefix registered in the instance's `glide.appcreator.company.code` system property, or `npm run deploy` will fail with `Unable to install application as application was null`. Check it at:
+  ```
+  https://<instance>.service-now.com/sys_properties_list.do?sysparm_query=name=glide.appcreator.company.code
+  ```
+  If the property's value doesn't match the `x_<code>_...` prefix in `now.config.json`, update `scope` (and regenerate `scopeId`) in `now.config.json` to match, and rename all `x_snc_build_agranx*` references across `src/` accordingly before building.
 
 ### Build & Deploy
 
