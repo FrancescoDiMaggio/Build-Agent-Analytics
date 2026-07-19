@@ -669,7 +669,7 @@
   border-radius: var(--ba-radius-lg);
   box-shadow: var(--ba-shadow-3);
   width: 90%;
-  max-width: 380px;
+  max-width: 720px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -701,17 +701,19 @@
 
 .ba-settings-modal__body {
   padding: var(--ba-space-5);
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--ba-space-3);
+  max-height: 60vh;
+  overflow-y: auto;
 }
 
 .ba-settings-modal__row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ba-space-4);
-  padding: var(--ba-space-2) var(--ba-space-3);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ba-space-2);
+  padding: var(--ba-space-3);
   background: var(--ba-surface);
   border-radius: var(--ba-radius-sm);
   transition: background var(--ba-duration-fast) var(--ba-ease);
@@ -728,7 +730,7 @@
 }
 
 .ba-settings-modal__input {
-  width: 64px;
+  width: 100%;
   padding: var(--ba-space-2);
   border: 1.5px solid var(--ba-border);
   border-radius: var(--ba-radius-sm);

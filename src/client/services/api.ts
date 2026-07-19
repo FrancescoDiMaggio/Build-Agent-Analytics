@@ -351,8 +351,10 @@ function buildComponentUrl(type: string, record: any): string {
       return `/${tableName}_list.do`;
     }
     case "ui_page": {
-      const pageName = val(record.name);
-      return `/${pageName}.do`;
+      const endpoint = val(record.endpoint);
+      if (endpoint) return `/${endpoint}`;
+      // Fallback to record form if endpoint not available
+      return `/sys_ui_page.do?sys_id=${sysId}`;
     }
     case "workspace":
       return `/sys_ux_app_config.do?sys_id=${sysId}`;
@@ -363,7 +365,7 @@ function buildComponentUrl(type: string, record: any): string {
     case "widget":
       return `/sp_widget.do?sys_id=${sysId}`;
     case "flow":
-      return `/sys_hub_flow.do?sys_id=${sysId}`;
+      return `/now/flow-designer/flow/${sysId}`;
     case "business_rule":
       return `/sys_script.do?sys_id=${sysId}`;
     case "script_include":
@@ -452,7 +454,7 @@ export async function fetchAppComposition(appId: string): Promise<AppComposition
     fetchByScope("sysevent_email_action", appId, "sys_id,name,event_name"),
     fetchByScope("sysevent_register", appId, "sys_id,event_name,table"),
     fetchByScope("sys_data_policy", appId, "sys_id,short_description,model_table"),
-    fetchByScope("sys_ui_page", appId, "sys_id,name,description"),
+    fetchByScope("sys_ui_page", appId, "sys_id,name,description,endpoint"),
     fetchByScope("sys_ux_app_config", appId, "sys_id,name,title"),
     fetchByScope("sp_portal", appId, "sys_id,title,url_suffix"),
     fetchByScope("sp_widget", appId, "sys_id,name,id"),
