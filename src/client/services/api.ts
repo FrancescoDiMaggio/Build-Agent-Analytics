@@ -1052,3 +1052,32 @@ export async function fetchEventTelemetry(taskId: string) {
   );
   return result || [];
 }
+
+export interface ToolErrorSummary {
+  toolName: string;
+  failureCount: number;
+  successCount: number;
+  totalCount: number;
+  errorSamples: string[];
+}
+
+/**
+ * Fetch all event telemetry records to aggregate tool-level errors.
+ * Optionally filter by task IDs (e.g. only current user's tasks).
+ */
+export async function fetchAllEventTelemetry(taskIds?: string[]): Promise<any[]> {
+  let query = "ORDERBYDESCstart_time";
+  if (taskIds && taskIds.length > 0) {
+    query = `event_idIN${taskIds.join(",")}^${query}`;
+  }
+  const params = new URLSearchParams({
+    sysparm_display_value: "all",
+    sysparm_query: query,
+    sysparm_fields: "sys_id,name,status,errors,event_id",
+    sysparm_limit: "5000",
+  });
+  const { result } = await request(
+    `${BASE}/sn_build_agent_event_telemetry?${params}`
+  );
+  return result || [];
+}

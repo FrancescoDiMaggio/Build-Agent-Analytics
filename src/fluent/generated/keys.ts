@@ -51,6 +51,10 @@ declare global {
                         table: 'sys_ux_theme_asset'
                         id: 'd1a764e2335146cf8d6b32e179d6d077'
                     }
+                    'styles/performance.css': {
+                        table: 'sys_ux_theme_asset'
+                        id: 'b43ef5185cad493cae759afc45956d3a'
+                    }
                     'styles/shared.css': {
                         table: 'sys_ux_theme_asset'
                         id: 'f09027f3b1d24c978a6083342bce7299'

@@ -368,3 +368,278 @@
   line-height: 1.4;
   word-break: break-word;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   USER FILTER TOGGLE
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.ba-view__header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ba-space-4);
+  margin-bottom: var(--ba-space-4);
+}
+
+.ba-perf-filter {
+  display: flex;
+  background: var(--ba-border-subtle);
+  border-radius: var(--ba-radius-pill);
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.ba-perf-filter__btn {
+  border: none;
+  background: transparent;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--ba-text-secondary);
+  border-radius: var(--ba-radius-pill);
+  cursor: pointer;
+  transition: all var(--ba-duration-fast) var(--ba-ease);
+  white-space: nowrap;
+}
+
+.ba-perf-filter__btn:hover {
+  color: var(--ba-text);
+}
+
+.ba-perf-filter__btn--active {
+  background: var(--ba-white);
+  color: var(--ba-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TOOL ERROR ANALYSIS SECTION
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.ba-perf-tool-errors {
+  background: var(--ba-white);
+  border-radius: var(--ba-radius-lg);
+  padding: var(--ba-space-5);
+  box-shadow: var(--ba-shadow-1);
+  border: 1px solid var(--ba-border-subtle);
+  margin-bottom: var(--ba-space-6);
+}
+
+.ba-perf-tool-errors__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ba-space-4);
+  flex-wrap: wrap;
+  gap: var(--ba-space-3);
+}
+
+.ba-perf-tool-errors__title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ba-text);
+}
+
+.ba-perf-tool-errors__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--ba-space-4);
+}
+
+.ba-perf-tool-errors__stat {
+  font-size: 0.6875rem;
+  color: var(--ba-text-secondary);
+}
+
+.ba-perf-tool-errors__stat strong {
+  color: var(--ba-text);
+}
+
+.ba-perf-tool-errors__rate {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--ba-radius-pill);
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ba-perf-tool-errors__rate--high {
+  background: #fee2e2;
+  color: #be123c;
+}
+
+.ba-perf-tool-errors__content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--ba-space-5);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .ba-perf-tool-errors__content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ba-perf-tool-errors__chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ba-space-4);
+}
+
+.ba-pie-chart {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.08));
+}
+
+.ba-pie-chart path {
+  transition: opacity var(--ba-duration-fast) var(--ba-ease);
+  cursor: default;
+}
+
+.ba-pie-chart path:hover {
+  opacity: 0.85;
+}
+
+.ba-pie-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 220px;
+  height: 220px;
+  font-size: 0.75rem;
+  color: var(--ba-text-secondary);
+  background: var(--ba-border-subtle);
+  border-radius: 50%;
+}
+
+.ba-perf-tool-errors__legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ba-space-2);
+}
+
+.ba-perf-tool-errors__legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ba-space-2);
+  font-size: 0.6875rem;
+}
+
+.ba-perf-tool-errors__legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.ba-perf-tool-errors__legend-label {
+  color: var(--ba-text-secondary);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+.ba-perf-tool-errors__legend-value {
+  font-weight: 700;
+  color: var(--ba-text);
+  min-width: 20px;
+  text-align: right;
+}
+
+/* Tool Error Table */
+.ba-perf-tool-errors__table {
+  overflow-x: auto;
+}
+
+.ba-perf-tool-errors__grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.6875rem;
+}
+
+.ba-perf-tool-errors__grid thead th {
+  text-align: left;
+  padding: var(--ba-space-2) var(--ba-space-3);
+  font-weight: 700;
+  color: var(--ba-text-secondary);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--ba-border-subtle);
+  white-space: nowrap;
+}
+
+.ba-perf-tool-errors__grid tbody tr {
+  border-bottom: 1px solid var(--ba-border-subtle);
+  transition: background var(--ba-duration-fast) var(--ba-ease);
+}
+
+.ba-perf-tool-errors__grid tbody tr:last-child {
+  border-bottom: none;
+}
+
+.ba-perf-tool-errors__grid tbody tr:hover {
+  background: rgba(var(--now-color--neutral-3, 246,247,248), 1);
+}
+
+.ba-perf-tool-errors__grid tbody td {
+  padding: var(--ba-space-2) var(--ba-space-3);
+  color: var(--ba-text-secondary);
+  vertical-align: middle;
+}
+
+.ba-perf-tool-errors__tool-name {
+  font-weight: 600;
+  color: var(--ba-text) !important;
+  font-family: var(--ba-font-mono);
+  white-space: nowrap;
+}
+
+.ba-perf-tool-errors__fail-count {
+  font-weight: 700;
+  color: #e11d48 !important;
+}
+
+.ba-perf-tool-errors__pct {
+  display: inline-block;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--ba-radius-pill);
+  font-weight: 700;
+  font-size: 0.625rem;
+  background: var(--ba-primary-100);
+  color: #047857;
+}
+
+.ba-perf-tool-errors__pct--medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.ba-perf-tool-errors__pct--high {
+  background: #fee2e2;
+  color: #be123c;
+}
+
+.ba-perf-tool-errors__sample {
+  font-size: 0.625rem;
+  color: var(--ba-text-tertiary) !important;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ba-font-mono);
+}
+
+.ba-perf-tool-errors__empty {
+  text-align: center;
+  padding: var(--ba-space-5);
+  font-size: 0.8125rem;
+  color: #059669;
+  background: #ecfdf5;
+  border-radius: var(--ba-radius);
+}

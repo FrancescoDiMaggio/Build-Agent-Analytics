@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { value, display } from "../utils/fields.ts";
-import { fetchTaskTelemetry } from "../services/api.ts";
+import { fetchTaskTelemetry, fetchAllEventTelemetry } from "../services/api.ts";
+import type { ToolErrorSummary } from "../services/api.ts";
 import { useQueryTracker } from "../services/queryTracker.ts";
 import { SkeletonPerformanceView } from "./Skeleton.tsx";
 import KpiCard from "./KpiCard.tsx";
 import DataTable from "./DataTable.tsx";
 import type { Column } from "./DataTable.tsx";
 import BuildErrorDisplay from "./BuildErrorDisplay.tsx";
+
+declare const window: any;
 
 interface TaskRecord {
   sys_id: any;
@@ -43,9 +46,16 @@ interface TaskRow {
   date: string;
 }
 
+interface EventRecord {
+  sys_id: any;
+  name: any;
+  status: any;
+  errors: any;
+  event_id: any;
+}
+
 function parseDurationSeconds(dur: string): number {
   if (!dur) return 0;
-  // ServiceNow duration format: "1970-01-01 00:02:35" or "HH:MM:SS" or display
   const hmsMatch = dur.match(/(\d+):(\d+):(\d+)/);
   if (hmsMatch) {
     return parseInt(hmsMatch[1]) * 3600 + parseInt(hmsMatch[2]) * 60 + parseInt(hmsMatch[3]);
@@ -63,9 +73,86 @@ function formatDuration(totalSeconds: number): string {
   return `${s}s`;
 }
 
+function getCurrentUserId(): string {
+  return window.NOW?.user?.userID || window.g_user_id || "";
+}
+
+// ─── Pie Chart Colors ──────────────────────────────────────────────────────────
+
+const PIE_COLORS = [
+  "#e25c5c", // red
+  "#f2a93b", // orange
+  "#e6d84c", // yellow
+  "#5cb85c", // green
+  "#5bc0de", // light blue
+  "#8e6cba", // purple
+  "#d9534f", // dark red
+  "#5a9bd5", // blue
+  "#f0ad4e", // amber
+  "#7b68ee", // medium slate blue
+];
+
+// ─── SVG Pie Chart Component ───────────────────────────────────────────────────
+
+interface PieSlice {
+  label: string;
+  value: number;
+  color: string;
+}
+
+function PieChart({ slices, size = 200 }: { slices: PieSlice[]; size?: number }) {
+  const total = slices.reduce((sum, s) => sum + s.value, 0);
+  if (total === 0) return <div className="ba-pie-empty">No tool errors recorded</div>;
+
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size / 2 - 10;
+  let cumulativeAngle = -Math.PI / 2; // Start from top
+
+  const paths = slices.map((slice, i) => {
+    const angle = (slice.value / total) * 2 * Math.PI;
+    const startX = cx + radius * Math.cos(cumulativeAngle);
+    const startY = cy + radius * Math.sin(cumulativeAngle);
+    cumulativeAngle += angle;
+    const endX = cx + radius * Math.cos(cumulativeAngle);
+    const endY = cy + radius * Math.sin(cumulativeAngle);
+    const largeArcFlag = angle > Math.PI ? 1 : 0;
+
+    const d = [
+      `M ${cx} ${cy}`,
+      `L ${startX} ${startY}`,
+      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+      "Z",
+    ].join(" ");
+
+    const pct = Math.round((slice.value / total) * 100);
+    return (
+      <path
+        key={i}
+        d={d}
+        fill={slice.color}
+        stroke="rgba(var(--now-color--neutral-0, 255,255,255), 1)"
+        strokeWidth="2"
+      >
+        <title>{`${slice.label}: ${slice.value} errors (${pct}%)`}</title>
+      </path>
+    );
+  });
+
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="ba-pie-chart">
+      {paths}
+    </svg>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
+
 export default function AgentPerformance() {
-  const [tasks, setTasks] = useState<TaskRecord[]>([]);
+  const [allTasks, setAllTasks] = useState<TaskRecord[]>([]);
+  const [events, setEvents] = useState<EventRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterMyTasks, setFilterMyTasks] = useState(false);
   const { track, reset } = useQueryTracker();
 
   useEffect(() => {
@@ -75,8 +162,12 @@ export default function AgentPerformance() {
 
   async function loadData() {
     try {
-      const result = await track("Fetching task telemetry", () => fetchTaskTelemetry());
-      setTasks(result);
+      const [taskResult, eventResult] = await Promise.all([
+        track("Fetching task telemetry", () => fetchTaskTelemetry()),
+        track("Fetching tool events", () => fetchAllEventTelemetry()),
+      ]);
+      setAllTasks(taskResult);
+      setEvents(eventResult);
     } catch (e) {
       console.error("AgentPerformance load error:", e);
     } finally {
@@ -85,7 +176,19 @@ export default function AgentPerformance() {
   }
 
   if (loading) return <SkeletonPerformanceView />;
-  if (!tasks.length) return <div className="ba-empty">No task telemetry data available yet.</div>;
+  if (!allTasks.length) return <div className="ba-empty">No task telemetry data available yet.</div>;
+
+  // ─── User Filter ─────────────────────────────────────────────────────────────
+
+  const currentUserId = getCurrentUserId();
+  const tasks = filterMyTasks
+    ? allTasks.filter((t) => value(t.user) === currentUserId)
+    : allTasks;
+
+  const filteredTaskIds = new Set(tasks.map((t) => value(t.sys_id)));
+  const filteredEvents = filterMyTasks
+    ? events.filter((e) => filteredTaskIds.has(value(e.event_id)))
+    : events;
 
   // ─── Compute KPIs ────────────────────────────────────────────────────────────
 
@@ -131,6 +234,49 @@ export default function AgentPerformance() {
   const successPct = total > 0 ? (successCount / total) * 100 : 0;
   const failurePct = total > 0 ? (failureCount / total) * 100 : 0;
   const errorPct = total > 0 ? (errorCount / total) * 100 : 0;
+
+  // ─── Tool Error Aggregation ──────────────────────────────────────────────────
+
+  const toolStats = new Map<string, ToolErrorSummary>();
+  filteredEvents.forEach((evt) => {
+    const toolName = value(evt.name) || "unknown";
+    const status = value(evt.status);
+    const errorText = value(evt.errors) || "";
+
+    if (!toolStats.has(toolName)) {
+      toolStats.set(toolName, { toolName, failureCount: 0, successCount: 0, totalCount: 0, errorSamples: [] });
+    }
+    const stat = toolStats.get(toolName)!;
+    stat.totalCount++;
+    if (status === "failure") {
+      stat.failureCount++;
+      if (errorText && stat.errorSamples.length < 3) {
+        stat.errorSamples.push(errorText.length > 150 ? errorText.substring(0, 150) + "…" : errorText);
+      }
+    } else {
+      stat.successCount++;
+    }
+  });
+
+  const toolErrorList = Array.from(toolStats.values())
+    .filter((t) => t.failureCount > 0)
+    .sort((a, b) => b.failureCount - a.failureCount);
+
+  const totalToolCalls = filteredEvents.length;
+  const totalToolFailures = toolErrorList.reduce((sum, t) => sum + t.failureCount, 0);
+  const toolFailureRate = totalToolCalls > 0 ? Math.round((totalToolFailures / totalToolCalls) * 100) : 0;
+
+  // Pie chart slices (top 8 + "Other")
+  const topTools = toolErrorList.slice(0, 8);
+  const otherFailures = toolErrorList.slice(8).reduce((sum, t) => sum + t.failureCount, 0);
+  const pieSlices: PieSlice[] = topTools.map((t, i) => ({
+    label: t.toolName,
+    value: t.failureCount,
+    color: PIE_COLORS[i % PIE_COLORS.length],
+  }));
+  if (otherFailures > 0) {
+    pieSlices.push({ label: "Other", value: otherFailures, color: "#999" });
+  }
 
   // ─── Table rows ──────────────────────────────────────────────────────────────
 
@@ -212,10 +358,32 @@ export default function AgentPerformance() {
 
   return (
     <div className="ba-view">
-      <h1 className="ba-view__title">Agent Performance</h1>
-      <p className="ba-view__subtitle">
-        Task execution metrics, success rates, and build quality indicators.
-      </p>
+      <div className="ba-view__header-row">
+        <div>
+          <h1 className="ba-view__title">Agent Performance</h1>
+          <p className="ba-view__subtitle">
+            Task execution metrics, success rates, and build quality indicators.
+          </p>
+        </div>
+        <div className="ba-perf-filter">
+          <button
+            className={`ba-perf-filter__btn ${!filterMyTasks ? "ba-perf-filter__btn--active" : ""}`}
+            onClick={() => setFilterMyTasks(false)}
+          >
+            All Users
+          </button>
+          <button
+            className={`ba-perf-filter__btn ${filterMyTasks ? "ba-perf-filter__btn--active" : ""}`}
+            onClick={() => setFilterMyTasks(true)}
+          >
+            My Tasks
+          </button>
+        </div>
+      </div>
+
+      {filterMyTasks && tasks.length === 0 && (
+        <div className="ba-empty">No task telemetry for your user yet. Showing empty state.</div>
+      )}
 
       {/* KPI Row */}
       <div className="ba-kpi-row">
@@ -269,6 +437,79 @@ export default function AgentPerformance() {
             Error ({errorCount})
           </div>
         </div>
+      </div>
+
+      {/* Tool Errors Section with Pie Chart */}
+      <div className="ba-perf-tool-errors">
+        <div className="ba-perf-tool-errors__header">
+          <div className="ba-perf-tool-errors__title">Tool Error Analysis</div>
+          <div className="ba-perf-tool-errors__summary">
+            <span className="ba-perf-tool-errors__stat">
+              <strong>{totalToolFailures}</strong> failures out of <strong>{totalToolCalls}</strong> tool calls
+            </span>
+            <span className={`ba-perf-tool-errors__rate ${toolFailureRate > 20 ? "ba-perf-tool-errors__rate--high" : ""}`}>
+              {toolFailureRate}% failure rate
+            </span>
+          </div>
+        </div>
+
+        {toolErrorList.length > 0 ? (
+          <div className="ba-perf-tool-errors__content">
+            <div className="ba-perf-tool-errors__chart">
+              <PieChart slices={pieSlices} size={220} />
+              <div className="ba-perf-tool-errors__legend">
+                {pieSlices.map((slice, i) => (
+                  <div key={i} className="ba-perf-tool-errors__legend-item">
+                    <span
+                      className="ba-perf-tool-errors__legend-dot"
+                      style={{ backgroundColor: slice.color }}
+                    ></span>
+                    <span className="ba-perf-tool-errors__legend-label">{slice.label}</span>
+                    <span className="ba-perf-tool-errors__legend-value">{slice.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="ba-perf-tool-errors__table">
+              <table className="ba-perf-tool-errors__grid">
+                <thead>
+                  <tr>
+                    <th>Tool</th>
+                    <th>Failures</th>
+                    <th>Total</th>
+                    <th>Fail %</th>
+                    <th>Sample Error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {toolErrorList.slice(0, 10).map((tool, i) => {
+                    const failPct = tool.totalCount > 0 ? Math.round((tool.failureCount / tool.totalCount) * 100) : 0;
+                    return (
+                      <tr key={i}>
+                        <td className="ba-perf-tool-errors__tool-name">{tool.toolName}</td>
+                        <td className="ba-perf-tool-errors__fail-count">{tool.failureCount}</td>
+                        <td>{tool.totalCount}</td>
+                        <td>
+                          <span className={`ba-perf-tool-errors__pct ${failPct > 50 ? "ba-perf-tool-errors__pct--high" : failPct > 20 ? "ba-perf-tool-errors__pct--medium" : ""}`}>
+                            {failPct}%
+                          </span>
+                        </td>
+                        <td className="ba-perf-tool-errors__sample">
+                          {tool.errorSamples[0] || "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="ba-perf-tool-errors__empty">
+            ✅ No tool errors recorded — all tool calls succeeded!
+          </div>
+        )}
       </div>
 
       {/* Task Type Breakdown */}
