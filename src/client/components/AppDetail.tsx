@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { display, value, countMessagesBySender } from "../utils/fields.ts";
 import { formatImplDuration, getImplMinutes } from "../utils/workingDuration.ts";
 import { fetchConversations, fetchMessages, fetchCheckpoints, fetchAppNames, fetchAppComposition, fetchSettings, saveSettings } from "../services/api.ts";
@@ -23,6 +24,7 @@ import type { ComplexityWeights, PartnerEstimates, ROIResult, CompositionKey } f
 import { useQueryTracker } from "../services/queryTracker.ts";
 import { SkeletonAppDetailView } from "./Skeleton.tsx";
 import KpiCard from "./KpiCard.tsx";
+import KpiInfoModal, { KPI_DESCRIPTIONS } from "./KpiInfoModal.tsx";
 import DataTable from "./DataTable.tsx";
 
 interface AppDetailProps {
@@ -110,7 +112,7 @@ function CompositionModal({ icon, label, items, onClose }: { icon: string; label
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div className="ba-modal-overlay" onClick={onClose}>
       <div className="ba-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ba-modal__header">
@@ -138,7 +140,8 @@ function CompositionModal({ icon, label, items, onClose }: { icon: string; label
           </ul>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -176,7 +179,7 @@ function SettingsEditor({
   // Only show keys that have corresponding items in composition (non-zero weight is always shown in settings)
   const visibleKeys = Object.keys(values).filter((k) => labels[k]);
 
-  return (
+  return createPortal(
     <div className="ba-modal-overlay" onClick={onCancel}>
       <div className="ba-settings-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ba-settings-modal__header">
@@ -203,7 +206,8 @@ function SettingsEditor({
           <button className="ba-settings-modal__save" onClick={() => onSave(draft)} type="button">Save</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -225,6 +229,9 @@ export default function AppDetail({ appId, onNavigate }: AppDetailProps) {
 
   // Composition modal state
   const [modalData, setModalData] = useState<{ icon: string; label: string; items: ComponentItem[] } | null>(null);
+
+  // KPI info modal state
+  const [kpiInfoKey, setKpiInfoKey] = useState<string | null>(null);
 
   // Complexity & ROI state
   const [weights, setWeights] = useState<ComplexityWeights>(DEFAULT_WEIGHTS);
@@ -415,20 +422,22 @@ export default function AppDetail({ appId, onNavigate }: AppDetailProps) {
         {convoData.length} conversation{convoData.length !== 1 ? "s" : ""} over time
       </p>
       <div className="ba-kpi-row">
-        <KpiCard title="User Messages" value={totalUser} icon="user" />
-        <KpiCard title="Assistant Messages" value={totalAssistant} icon="assistant" />
+        <KpiCard title="User Messages" value={totalUser} icon="user" onClick={() => setKpiInfoKey("user")} />
+        <KpiCard title="Assistant Messages" value={totalAssistant} icon="assistant" onClick={() => setKpiInfoKey("assistant")} />
         <KpiCard
           title="Tokens"
           value={appTokenUsage ? formatEstimate(appTokenUsage.total) : "—"}
           icon="tokens"
           tooltip={tokenTooltip}
+          onClick={() => setKpiInfoKey("tokens")}
         />
-        <KpiCard title="Impl. Duration" value={implDuration || "—"} icon="duration" />
+        <KpiCard title="Impl. Duration" value={implDuration || "—"} icon="duration" onClick={() => setKpiInfoKey("duration")} />
         <KpiCard
           title="NowAssist Units"
           value={nowAssistUnits.toLocaleString("de-DE")}
           icon="cost"
           tooltip={`${totalUser} user messages × ${NOWASSIST_UNIT_COST} NowAssist units = ${nowAssistUnits.toLocaleString("de-DE")}`}
+          onClick={() => setKpiInfoKey("cost")}
         />
       </div>
 
@@ -641,6 +650,14 @@ export default function AppDetail({ appId, onNavigate }: AppDetailProps) {
           label={modalData.label}
           items={modalData.items}
           onClose={() => setModalData(null)}
+        />
+      )}
+
+      {/* KPI Info Modal */}
+      {kpiInfoKey && KPI_DESCRIPTIONS[kpiInfoKey] && (
+        <KpiInfoModal
+          info={KPI_DESCRIPTIONS[kpiInfoKey]}
+          onClose={() => setKpiInfoKey(null)}
         />
       )}
     </div>

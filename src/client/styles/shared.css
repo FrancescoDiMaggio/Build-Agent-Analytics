@@ -792,3 +792,96 @@
   border-color: var(--ba-text-muted);
   color: var(--ba-text);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   KPI CARD — Clickable state
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.ba-kpi-card--clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.ba-kpi-card--clickable:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: var(--ba-shadow-2), 0 0 0 2px var(--ba-primary-100);
+  border-color: var(--ba-primary-light);
+}
+
+.ba-kpi-card--clickable:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: var(--ba-shadow-1);
+}
+
+.ba-kpi-card--clickable:focus-visible {
+  outline: 2px solid var(--ba-primary);
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   KPI INFO MODAL
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.ba-kpi-info-modal {
+  background: var(--ba-white);
+  border-radius: var(--ba-radius-lg);
+  box-shadow: var(--ba-shadow-3);
+  width: 90%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: ba-slideUp var(--ba-duration) var(--ba-ease) both;
+}
+
+.ba-kpi-info-modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--ba-space-2);
+  padding: var(--ba-space-4) var(--ba-space-5);
+  border-bottom: 1px solid var(--ba-border);
+  background: var(--ba-surface);
+}
+
+.ba-kpi-info-modal__icon {
+  font-size: 1.25rem;
+}
+
+.ba-kpi-info-modal__title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ba-text);
+  flex: 1;
+}
+
+.ba-kpi-info-modal__body {
+  padding: var(--ba-space-5);
+}
+
+.ba-kpi-info-modal__description {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--ba-text);
+  margin: 0 0 var(--ba-space-5) 0;
+}
+
+.ba-kpi-info-modal__methodology {
+  background: var(--ba-surface);
+  border: 1px solid var(--ba-border-subtle);
+  border-radius: var(--ba-radius);
+  padding: var(--ba-space-4);
+}
+
+.ba-kpi-info-modal__methodology-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ba-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--ba-space-2) 0;
+}
+
+.ba-kpi-info-modal__methodology-text {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--ba-text-secondary);
+  margin: 0;
+}

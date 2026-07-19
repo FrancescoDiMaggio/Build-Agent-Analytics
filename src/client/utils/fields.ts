@@ -122,3 +122,77 @@ export function senderLabel(sender: MessageSender): string {
     default: return "Unknown";
   }
 }
+
+// ─── NAU Breakdown ─────────────────────────────────────────────────────────────
+
+export interface NauBreakdown {
+  userMessages: number;      // Regular typed prompts
+  installs: number;          // install/build_install tool calls
+  planning: number;          // planning tool calls
+  appCreations: number;      // create_new_servicenow_app tool calls
+  interviews: number;        // interview tool calls
+  totalInteractions: number; // sum of all above
+  nauPerUnit: number;        // 25
+  totalNau: number;          // totalInteractions * 25
+}
+
+/**
+ * Classify an assistant-tool message by its tool type for NAU breakdown.
+ * Returns the category or null if not a NAU-relevant tool.
+ */
+export function classifyToolForNau(contentField: any): "install" | "planning" | "appCreation" | "interview" | null {
+  const raw = typeof contentField === "string" ? contentField : contentField?.value || "";
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.sender !== "assistant-tool") return null;
+    const toolName = parsed.toolActualName || "";
+    if (toolName === "install" || toolName === "build_install") return "install";
+    if (toolName === "planning") return "planning";
+    if (toolName === "create_new_servicenow_app") return "appCreation";
+    if (toolName === "interview") return "interview";
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Compute NAU breakdown from an array of message records (raw API results with content field).
+ */
+export function computeNauBreakdown(messages: any[]): NauBreakdown {
+  let userMessages = 0;
+  let installs = 0;
+  let planning = 0;
+  let appCreations = 0;
+  let interviews = 0;
+
+  for (const msg of messages) {
+    const raw = typeof msg.content === "string" ? msg.content : msg.content?.value || "";
+    if (!raw) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.sender === "user") {
+        userMessages++;
+      } else if (parsed.sender === "assistant-tool") {
+        const toolName = parsed.toolActualName || "";
+        if (toolName === "install" || toolName === "build_install") installs++;
+        else if (toolName === "planning") planning++;
+        else if (toolName === "create_new_servicenow_app") appCreations++;
+        else if (toolName === "interview") interviews++;
+      }
+    } catch { /* skip */ }
+  }
+
+  const totalInteractions = userMessages + installs + planning + appCreations + interviews;
+  return {
+    userMessages,
+    installs,
+    planning,
+    appCreations,
+    interviews,
+    totalInteractions,
+    nauPerUnit: 25,
+    totalNau: totalInteractions * 25,
+  };
+}

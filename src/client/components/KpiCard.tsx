@@ -7,9 +7,10 @@ interface KpiCardProps {
   tooltip?: string;
   onRefresh?: () => Promise<void>;
   loading?: boolean;
+  onClick?: () => void;
 }
 
-export default function KpiCard({ title, value: kpiValue, icon, tooltip, onRefresh, loading }: KpiCardProps) {
+export default function KpiCard({ title, value: kpiValue, icon, tooltip, onRefresh, loading, onClick }: KpiCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -47,9 +48,13 @@ export default function KpiCard({ title, value: kpiValue, icon, tooltip, onRefre
 
   return (
     <div
-      className={`ba-kpi-card${modifier}`}
+      className={`ba-kpi-card${modifier}${onClick ? " ba-kpi-card--clickable" : ""}`}
       onMouseEnter={() => tooltip && setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
     >
       {onRefresh && (
         <button

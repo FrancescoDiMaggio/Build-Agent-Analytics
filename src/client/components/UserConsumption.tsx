@@ -9,6 +9,7 @@ import { SkeletonConsumptionView } from "./Skeleton.tsx";
 import DataTable from "./DataTable.tsx";
 import type { Column } from "./DataTable.tsx";
 import KpiCard from "./KpiCard.tsx";
+import { NauBreakdownPanel } from "./NauBreakdown.tsx";
 
 interface UserConsumptionProps {
   onNavigate: (view: string, id?: string, month?: string | null) => void;
@@ -128,7 +129,14 @@ export default function UserConsumption({ onNavigate }: UserConsumptionProps) {
     { key: "userName", label: "User Name", sortable: true },
     { key: "conversations", label: "Conversations", sortable: true },
     { key: "userMessages", label: "User Messages", sortable: true },
-    { key: "nauUnits", label: "Now Assist Units", sortable: true },
+    {
+      key: "nauUnits",
+      label: "Now Assist Units",
+      sortable: true,
+      render: (row: any) => (
+        <NauBreakdownPanel breakdown={row.breakdown} compact />
+      ),
+    },
   ];
 
   if (loading && kpiLoading) return <SkeletonConsumptionView />;

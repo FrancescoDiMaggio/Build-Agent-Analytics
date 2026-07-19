@@ -1,9 +1,13 @@
 /**
  * Implementation duration utilities.
  *
- * Primary metric: sum of time intervals between consecutive user messages.
- * This reflects actual "interaction time" — how long the user actively worked
- * with Build Agent across all conversations for an application.
+ * Primary metric: sum of per-turn working time.
+ * A "turn" starts with a user message and ends with the last Build Agent
+ * (assistant) message before the next user message. The duration of each turn
+ * is: last_assistant_timestamp − user_message_timestamp.
+ *
+ * This avoids counting idle time between sessions — if a user reopens an old
+ * conversation hours later, that gap is not included.
  */
 
 import { parseMessageContent, isUserMessage } from "./fields.ts";
@@ -21,7 +25,7 @@ function parseDate(dateStr: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// ─── Implementation Duration (Message-based) ────────────────────────────────
+// ─── Implementation Duration (Turn-based) ───────────────────────────────────
 
 /**
  * Extract the value from a ServiceNow display_value/value field.
@@ -31,48 +35,79 @@ function fieldValue(field: any): string {
   return field?.value || "";
 }
 
+interface TimestampedMessage {
+  sender: "user" | "assistant";
+  timestamp: number;
+}
+
 /**
  * Given an array of message records (with `content` and `sys_created_on` fields),
- * compute the implementation duration as the sum of intervals between consecutive
- * user messages, in milliseconds.
+ * compute the implementation duration as the sum of per-turn working intervals,
+ * in milliseconds.
  *
  * Algorithm:
- * 1. Filter messages to only user messages
- * 2. Extract and sort by sys_created_on timestamp
- * 3. Calculate delta between each consecutive pair
- * 4. Sum all deltas
+ * 1. Parse all messages extracting sender and timestamp
+ * 2. Sort chronologically
+ * 3. Identify "turns": each turn starts with a user message
+ * 4. For each turn, find the last assistant message before the next user message
+ * 5. Turn duration = last_assistant_timestamp − user_message_timestamp
+ * 6. Sum all turn durations
  */
 export function calculateImplDurationMs(messages: any[]): number {
-  // Collect timestamps of user messages
-  const userTimestamps: number[] = [];
+  // Collect all messages with their sender type and timestamp
+  const parsed: TimestampedMessage[] = [];
 
   for (const msg of messages) {
-    const parsed = parseMessageContent(msg.content);
-    if (!parsed) continue;
-    if (!isUserMessage(parsed.sender)) continue;
+    const content = parseMessageContent(msg.content);
+    if (!content) continue;
 
     const dateStr = fieldValue(msg.sys_created_on);
     const date = parseDate(dateStr);
-    if (date) {
-      userTimestamps.push(date.getTime());
+    if (!date) continue;
+
+    if (isUserMessage(content.sender)) {
+      parsed.push({ sender: "user", timestamp: date.getTime() });
+    } else {
+      parsed.push({ sender: "assistant", timestamp: date.getTime() });
     }
   }
 
   // Sort chronologically
-  userTimestamps.sort((a, b) => a - b);
+  parsed.sort((a, b) => a.timestamp - b.timestamp);
 
-  // Sum deltas between consecutive user messages
+  // Walk through messages and compute per-turn duration
   let totalMs = 0;
-  for (let i = 1; i < userTimestamps.length; i++) {
-    totalMs += userTimestamps[i] - userTimestamps[i - 1];
+  let currentTurnStart: number | null = null;
+  let lastAssistantInTurn: number | null = null;
+
+  for (const entry of parsed) {
+    if (entry.sender === "user") {
+      // Close the previous turn if we had one with an assistant response
+      if (currentTurnStart !== null && lastAssistantInTurn !== null) {
+        totalMs += lastAssistantInTurn - currentTurnStart;
+      }
+      // Start a new turn
+      currentTurnStart = entry.timestamp;
+      lastAssistantInTurn = null;
+    } else {
+      // Assistant message — track as latest response in the current turn
+      if (currentTurnStart !== null) {
+        lastAssistantInTurn = entry.timestamp;
+      }
+    }
+  }
+
+  // Close the last turn if it ended with an assistant response
+  if (currentTurnStart !== null && lastAssistantInTurn !== null) {
+    totalMs += lastAssistantInTurn - currentTurnStart;
   }
 
   return totalMs;
 }
 
 /**
- * Format milliseconds as a human-readable duration string.
- * Examples: "3h 45m", "1d 2h", "< 1m", "12m"
+ * Format milliseconds as a human-readable duration string (hours and minutes only).
+ * Examples: "3h 45m", "0h 12m", "< 1m"
  */
 export function formatDurationMs(ms: number): string {
   if (ms <= 0) return "—";
@@ -80,23 +115,15 @@ export function formatDurationMs(ms: number): string {
   const totalMinutes = Math.round(ms / 60000);
   if (totalMinutes < 1) return "< 1m";
 
-  const totalHours = Math.floor(totalMinutes / 60);
-  const remainingMinutes = totalMinutes % 60;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
 
-  if (totalHours === 0) {
-    return `${remainingMinutes}m`;
+  if (hours === 0) {
+    return `${minutes}m`;
   }
 
-  const days = Math.floor(totalHours / 24);
-  const remainingHours = totalHours % 24;
-
-  if (days === 0) {
-    if (remainingMinutes === 0) return `${totalHours}h`;
-    return `${totalHours}h ${remainingMinutes}m`;
-  }
-
-  if (remainingHours === 0) return `${days}d`;
-  return `${days}d ${remainingHours}h`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
 }
 
 /**

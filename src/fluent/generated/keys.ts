@@ -5,6 +5,19 @@ declare global {
         namespace Internal {
             interface Keys extends KeysRegistry {
                 explicit: {
+                    '0987e6c83b8a0b949a1600b693e45ace': {
+                        table: 'sys_wdf_external_connector_mapping'
+                        id: '0987e6c83b8a0b949a1600b693e45ace'
+                    }
+                    '153866cc3b8a0b949a1600b693e45afd': {
+                        table: 'sys_openapi'
+                        id: '153866cc3b8a0b949a1600b693e45afd'
+                    }
+                    '28c9ea843bca0b949a1600b693e45af2': {
+                        table: 'sys_openapi_operation'
+                        id: '28c9ea843bca0b949a1600b693e45af2'
+                        deleted: true
+                    }
                     'analytics-dashboard-module': {
                         table: 'sys_app_module'
                         id: 'b7aba667942d4cacbb2238245be2b41a'
@@ -21,6 +34,14 @@ declare global {
                     'build-agent-analytics-menu': {
                         table: 'sys_app_application'
                         id: 'e00f541a4cc945a7aeb71f09a67d3742'
+                    }
+                    e538a6cc3b8a0b949a1600b693e45a68: {
+                        table: 'sys_openapi_operation'
+                        id: 'e538a6cc3b8a0b949a1600b693e45a68'
+                    }
+                    f60a72483b424b949a1600b693e45ac3: {
+                        table: 'sys_openapi_operation'
+                        id: 'f60a72483b424b949a1600b693e45ac3'
                     }
                     package_json: {
                         table: 'sys_module'

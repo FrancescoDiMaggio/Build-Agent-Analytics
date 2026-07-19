@@ -615,6 +615,9 @@ export async function fetchMessagesForTimeSeries(appId: string): Promise<any[]> 
 
 // ─── User Consumption API ──────────────────────────────────────────────────────
 
+import type { NauBreakdown } from "../utils/fields.ts";
+import { classifyToolForNau } from "../utils/fields.ts";
+
 export interface UserConsumptionRow {
   userId: string;
   userName: string;
@@ -622,6 +625,7 @@ export interface UserConsumptionRow {
   userMessages: number;
   nauUnits: number;
   applicationNames: string[];
+  breakdown: NauBreakdown;
 }
 
 /**
@@ -679,8 +683,18 @@ export async function fetchUserConsumption(monthFilter?: string): Promise<UserCo
     return id;
   }).filter(Boolean);
 
-  // Fetch messages with content field to identify user messages
+  // Fetch messages with content field to identify user messages and tool calls
   const userMsgByConvo = new Map<string, number>();
+  const toolByUserConvo = new Map<string, { installs: number; planning: number; appCreations: number; interviews: number }>();
+
+  // Build a convoId -> userId lookup
+  const convoToUser = new Map<string, string>();
+  convos.forEach((c: any) => {
+    const cId = typeof c.sys_id === "string" ? c.sys_id : c.sys_id?.value || "";
+    const uId = typeof c.user === "string" ? c.user : c.user?.value || "";
+    if (cId && uId) convoToUser.set(cId, uId);
+  });
+
   if (convoIds.length > 0) {
     const msgParams = new URLSearchParams({
       sysparm_display_value: "all",
@@ -691,10 +705,25 @@ export async function fetchUserConsumption(monthFilter?: string): Promise<UserCo
     const { result: msgs } = await request(`${BASE}/sn_build_agent_message?${msgParams}`);
     if (msgs) {
       msgs.forEach((m: any) => {
-        // Only count user messages
+        const cId = typeof m.conversation === "string" ? m.conversation : m.conversation?.value || "";
+        const uId = convoToUser.get(cId) || "";
+        if (!uId) return;
+
+        // Count user messages
         if (isUserMessageContent(m.content)) {
-          const cId = typeof m.conversation === "string" ? m.conversation : m.conversation?.value || "";
           userMsgByConvo.set(cId, (userMsgByConvo.get(cId) || 0) + 1);
+        }
+
+        // Classify tool calls for NAU breakdown
+        const toolType = classifyToolForNau(m.content);
+        if (toolType) {
+          const key = uId;
+          const existing = toolByUserConvo.get(key) || { installs: 0, planning: 0, appCreations: 0, interviews: 0 };
+          if (toolType === "install") existing.installs++;
+          else if (toolType === "planning") existing.planning++;
+          else if (toolType === "appCreation") existing.appCreations++;
+          else if (toolType === "interview") existing.interviews++;
+          toolByUserConvo.set(key, existing);
         }
       });
     }
@@ -719,12 +748,12 @@ export async function fetchUserConsumption(monthFilter?: string): Promise<UserCo
       userMessages: 0,
       nauUnits: 0,
       applicationNames: [],
+      breakdown: { userMessages: 0, installs: 0, planning: 0, appCreations: 0, interviews: 0, totalInteractions: 0, nauPerUnit: 25, totalNau: 0 },
     };
 
     existing.conversations += 1;
     const convoUserMsgs = userMsgByConvo.get(convoId) || 0;
     existing.userMessages += convoUserMsgs;
-    existing.nauUnits += convoUserMsgs * 25; // 25 NAU per user message
 
     if (appName && !existing.applicationNames.includes(appName)) {
       existing.applicationNames.push(appName);
@@ -737,6 +766,23 @@ export async function fetchUserConsumption(monthFilter?: string): Promise<UserCo
 
     userMap.set(userId, existing);
   });
+
+  // Compute breakdowns per user
+  for (const [userId, row] of userMap) {
+    const tools = toolByUserConvo.get(userId) || { installs: 0, planning: 0, appCreations: 0, interviews: 0 };
+    const totalInteractions = row.userMessages + tools.installs + tools.planning + tools.appCreations + tools.interviews;
+    row.breakdown = {
+      userMessages: row.userMessages,
+      installs: tools.installs,
+      planning: tools.planning,
+      appCreations: tools.appCreations,
+      interviews: tools.interviews,
+      totalInteractions,
+      nauPerUnit: 25,
+      totalNau: totalInteractions * 25,
+    };
+    row.nauUnits = row.breakdown.totalNau;
+  }
 
   return Array.from(userMap.values());
 }
@@ -796,6 +842,7 @@ export interface UserProfileData {
   totalMessages: number;
   totalConversations: number;
   nauUnits: number;
+  breakdown: NauBreakdown;
   appBreakdown: Array<{
     appId: string;
     appName: string;
@@ -844,6 +891,7 @@ export async function fetchUserProfile(userId: string): Promise<UserProfileData>
       totalMessages: 0,
       totalConversations: 0,
       nauUnits: 0,
+      breakdown: { userMessages: 0, installs: 0, planning: 0, appCreations: 0, interviews: 0, totalInteractions: 0, nauPerUnit: 25, totalNau: 0 },
       appBreakdown: [],
       timeline: [],
     };
@@ -959,12 +1007,17 @@ export async function fetchUserProfile(userId: string): Promise<UserProfileData>
     .map(([date, count]) => ({ date, messages: count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  // Compute NAU breakdown from all messages
+  const { computeNauBreakdown } = await import("../utils/fields.ts");
+  const breakdown = computeNauBreakdown(allMessages);
+
   return {
     userId,
     userName,
     totalMessages: totalUserMessages,
     totalConversations: convos.length,
-    nauUnits: totalUserMessages * 25,
+    nauUnits: breakdown.totalNau,
+    breakdown,
     appBreakdown,
     timeline,
   };

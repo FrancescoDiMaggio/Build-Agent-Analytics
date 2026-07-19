@@ -4,6 +4,7 @@ import type { UserProfileData } from "../services/api.ts";
 import { useQueryTracker } from "../services/queryTracker.ts";
 import { SkeletonUserProfileView } from "./Skeleton.tsx";
 import KpiCard from "./KpiCard.tsx";
+import { NauBreakdownPanel } from "./NauBreakdown.tsx";
 
 interface UserProfileProps {
   userId: string;
@@ -304,6 +305,12 @@ export default function UserProfile({ userId, onNavigate }: UserProfileProps) {
           value={profile.appBreakdown.length}
           icon="tokens"
         />
+      </div>
+
+      {/* Activity Timeline — Full Width */}
+      <div className="ba-chart ba-user-profile__timeline-full">
+        <h3 className="ba-section__title">NAU Breakdown</h3>
+        <NauBreakdownPanel breakdown={profile.breakdown} />
       </div>
 
       {/* Activity Timeline — Full Width */}

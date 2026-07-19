@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { display, value, parseMessageContent, senderLabel, countMessagesBySender } from "../utils/fields.ts";
-import type { ToolDetails, FileAttachment } from "../utils/fields.ts";
+import { display, value, parseMessageContent, senderLabel, countMessagesBySender, computeNauBreakdown } from "../utils/fields.ts";
+import type { ToolDetails, FileAttachment, NauBreakdown } from "../utils/fields.ts";
 import { fetchConversation, fetchMessages } from "../services/api.ts";
 import { analyzeConversation, analyzeMessage, formatEstimate, formatTokenCount } from "../utils/tokenEstimation.ts";
 import type { ConversationTokenUsage, MessageTokenInfo } from "../utils/tokenEstimation.ts";
 import KpiCard from "./KpiCard.tsx";
 import MarkdownRenderer from "./MarkdownRenderer.tsx";
+import { NauBreakdownPanel } from "./NauBreakdown.tsx";
 
 interface ConversationDetailProps {
   conversationId: string;
@@ -726,6 +727,7 @@ export default function ConversationDetail({
   const [userCount, setUserCount] = useState(0);
   const [assistantCount, setAssistantCount] = useState(0);
   const [tokenUsage, setTokenUsage] = useState<ConversationTokenUsage | null>(null);
+  const [nauBreakdown, setNauBreakdown] = useState<NauBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
   const [messageSearch, setMessageSearch] = useState("");
 
@@ -749,6 +751,10 @@ export default function ConversationDetail({
       // Compute token usage
       const usage = analyzeConversation(msgs);
       setTokenUsage(usage);
+
+      // Compute NAU breakdown
+      const breakdown = computeNauBreakdown(msgs);
+      setNauBreakdown(breakdown);
     } catch (e) {
       console.error("ConversationDetail load error:", e);
     } finally {
@@ -759,7 +765,7 @@ export default function ConversationDetail({
   if (loading) return <div className="ba-loading">Loading conversation...</div>;
   if (!conversation) return <div className="ba-empty">Conversation not found</div>;
 
-  const nowAssistUnits = userCount * NOWASSIST_UNIT_COST;
+  const nowAssistUnits = nauBreakdown ? nauBreakdown.totalNau : userCount * NOWASSIST_UNIT_COST;
 
   const conversationItems = groupMessages(messages);
 
@@ -823,7 +829,7 @@ export default function ConversationDetail({
           title="NowAssist Units"
           value={nowAssistUnits.toLocaleString("de-DE")}
           icon="cost"
-          tooltip={`${userCount} user messages × ${NOWASSIST_UNIT_COST} NowAssist units = ${nowAssistUnits.toLocaleString("de-DE")}`}
+          tooltip={nauBreakdown ? `${nauBreakdown.totalInteractions} interactions × ${NOWASSIST_UNIT_COST} = ${nowAssistUnits.toLocaleString("de-DE")} NAU` : `${userCount} user messages × ${NOWASSIST_UNIT_COST} NowAssist units = ${nowAssistUnits.toLocaleString("de-DE")}`}
         />
       </div>
 
@@ -831,6 +837,14 @@ export default function ConversationDetail({
       {tokenUsage && tokenUsage.total > 0 && (
         <div className="ba-section">
           <TokenUsageSummary usage={tokenUsage} />
+        </div>
+      )}
+
+      {/* NAU Breakdown */}
+      {nauBreakdown && nauBreakdown.totalInteractions > 0 && (
+        <div className="ba-section">
+          <h2 className="ba-section__title">NAU Breakdown</h2>
+          <NauBreakdownPanel breakdown={nauBreakdown} />
         </div>
       )}
 
